@@ -1,3 +1,11 @@
 streamlit
-PyMuPDF==1.23.22
+pymupdf
+openai
+scikit-learn
+pandas
+numpy
+nltk
+transformers
+torch
+regex
 
