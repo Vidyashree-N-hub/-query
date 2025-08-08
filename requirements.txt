@@ -1,11 +1,3 @@
 streamlit
-pymupdf
-openai
-scikit-learn
-pandas
-numpy
-nltk
-transformers
-torch
-regex
+PyMuPDF==1.23.22
 
