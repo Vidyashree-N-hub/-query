@@ -1,4 +1,11 @@
-flask
 streamlit
 pymupdf
+openai
+scikit-learn
+pandas
+numpy
+nltk
+transformers
+torch
+regex
 
