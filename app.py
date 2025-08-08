@@ -64,23 +64,43 @@ class DocumentLoader:
         return text
 
 class ClauseRetriever:
-    def _init_(self, documents: List[str], filenames: List[str]):
+    def __init__(self, documents: List[str], filenames: List[str]):  # ✅ FIXED constructor
         self.documents = documents
         self.filenames = filenames
 
     def retrieve_clauses(self, parsed_query: Dict) -> List[Dict]:
-        return []  # Hackathon version: skip clause matching
+        clauses = []
+        proc = parsed_query.get('procedure')
+        if not proc:
+            return []
+
+        for doc, fname in zip(self.documents, self.filenames):
+            for match in re.finditer(re.escape(proc), doc, re.IGNORECASE):
+                start = max(0, match.start() - 100)
+                end = min(len(doc), match.end() + 200)
+                snippet = doc[start:end].strip().replace('\n', ' ')
+                clauses.append({"clause": snippet, "document": fname})
+        return clauses
 
 class DecisionEvaluator:
     def evaluate(self, parsed_query: Dict, clauses: List[Dict]) -> str:
         procedure = parsed_query.get("procedure")
-        if procedure:
-            return f"Yes, {procedure} is covered under the policy."
-        return "No, the query does not specify a valid procedure to evaluate coverage."
+        policy_duration = parsed_query.get("policy_duration_months")
+
+        if not procedure:
+            return "No, coverage cannot be determined as the procedure is missing in the query."
+
+        if policy_duration is None:
+            return f"Yes, {procedure} is covered under the policy (policy duration not specified, assumed valid)."
+
+        if policy_duration < 12:
+            return f"No, {procedure} is not covered as the policy duration is only {policy_duration} month(s) (minimum 12 months required)."
+
+        return f"Yes, {procedure} is covered under the policy."
 
 # Streamlit UI
 st.set_page_config(page_title="Insurance Checker", layout="centered")
-st.title("\U0001F6E1\ufe0f Insurance Coverage Checker")
+st.title("🛡️ Insurance Coverage Checker")
 
 query = st.text_input("Enter your query (e.g., '46M, knee surgery, Pune, 3-month policy'):")
 
@@ -98,8 +118,16 @@ if query:
     retriever = ClauseRetriever(documents, filenames)
     matched_clauses = retriever.retrieve_clauses(parsed_query)
 
+    st.subheader("🔍 Matched Clauses")
+    if matched_clauses:
+        for clause in matched_clauses:
+            st.markdown(f"**From `{clause['document']}`:**")
+            st.info(clause['clause'])
+    else:
+        st.warning("No relevant clauses found.")
+
     evaluator = DecisionEvaluator()
     result = evaluator.evaluate(parsed_query, matched_clauses)
 
+    st.subheader("📄 Final Decision")
     st.success(result)
-
