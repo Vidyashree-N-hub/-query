@@ -93,7 +93,7 @@ class DecisionEvaluator:
         if policy_duration is None:
             return f"Yes, {procedure} is covered under the policy (policy duration not specified, assumed valid)."
 
-        if policy_duration < 12:
+        if policy_duration < 3:
             return f"No, {procedure} is not covered as the policy duration is only {policy_duration} month(s) (minimum 12 months required)."
 
         return f"Yes, {procedure} is covered under the policy."
